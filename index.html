@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Local AI Chat</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #f4f4f9; display: flex; justify-content: center; padding: 20px; }
         .chat-container { width: 100%; max-width: 800px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: 90vh; }
@@ -14,6 +15,12 @@
         .message { margin-bottom: 15px; padding: 10px; border-radius: 8px; }
         .user { background: #e9ecef; align-self: flex-end; }
         .ai { background: #f1f3f5; border-left: 4px solid #007bff; white-space: pre-wrap; }
+        #stop-btn { background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; display: none; }
+
+        /* Стили для кода внутри ответов */
+        pre { background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        code { font-family: monospace; background: #eee; padding: 2px 4px; border-radius: 3px; }
+        pre code { background: none; padding: 0; }
     </style>
 </head>
 <body>
@@ -23,22 +30,37 @@
     <div class="input-area">
         <input type="text" id="user-input" placeholder="Введите ваш промпт..." onkeypress="if(event.key === 'Enter') sendMessage()">
         <button id="send-btn" onclick="sendMessage()">Отправить</button>
+        <button id="stop-btn" onclick="stopGeneration()">Стоп</button>
     </div>
 </div>
 
 <script>
+    let currentAbortController = null; // Храним контроллер здесь
+
+    function stopGeneration() {
+        if (currentAbortController) {
+            currentAbortController.abort(); // Останавливаем fetch
+            currentAbortController = null;
+        }
+    }
+
     async function sendMessage() {
         const input = document.getElementById('user-input');
-        const button = document.getElementById('send-btn');
+        const sendBtn = document.getElementById('send-btn');
+        const stopBtn = document.getElementById('stop-btn');
         const chatWindow = document.getElementById('chat-window');
         const prompt = input.value.trim();
 
         if (!prompt) return;
 
+        // Создаем новый контроллер для этого запроса
+        currentAbortController = new AbortController();
+
         // Блокируем ввод
-        input.value = '';
+        // input.value = '';
         input.disabled = true;
-        button.disabled = true;
+        sendBtn.style.display = 'none';
+        stopBtn.style.display = 'inline-block';
 
         // Добавляем сообщение пользователя
         chatWindow.innerHTML += `<div class="message user"><b>Вы:</b> ${prompt}</div>`;
@@ -48,19 +70,19 @@
         aiMsgDiv.className = 'message ai';
         aiMsgDiv.innerHTML = '<b>AI:</b> <span class="content"></span>';
         chatWindow.appendChild(aiMsgDiv);
-        const contentSpan = aiMsgDiv.querySelector('.content');
+        const contentDiv = aiMsgDiv.querySelector('.content');
 
         chatWindow.scrollTop = chatWindow.scrollHeight;
+
+        let fullText = "";
 
         try {
             const response = await fetch('http://127.0.0.1:3000/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt })
+                body: JSON.stringify({ prompt }),
+                signal: currentAbortController.signal // Передаем сигнал в fetch
             });
- 
-            console.log("Начало чтения потока...");
-
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
@@ -81,7 +103,8 @@
                         try {
                             const data = JSON.parse(dataStr);
                             if (data.chunk) {
-                                contentSpan.textContent += data.chunk;
+                                fullText += data.chunk;
+                                contentDiv.innerHTML = marked.parse(fullText);
                                 chatWindow.scrollTop = chatWindow.scrollHeight;
                             }
                         } catch (e) {
@@ -91,11 +114,17 @@
                 }
             }
         } catch (error) {
-            contentSpan.textContent = "Ошибка связи с сервером.";
+          if (error.name === 'AbortError') {
+            contentDiv.innerHTML += "<br><i>[Генерация остановлена пользователем]</i>";
+          } else {
+            contentDiv.textContent = "Ошибка связи с сервером.";
             console.error(error);
+          }
         } finally {
             input.disabled = false;
-            button.disabled = false;
+            sendBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+            currentAbortController = null;
             input.focus();
         }
     }

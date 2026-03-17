@@ -54,6 +54,17 @@ fastify.post('/chat', async (request, reply) => {
         return reply.code(400).send({ error: "Промпт обязателен" });
     }
 
+    // 1. Создаем контроллер для этого конкретного запроса
+    const abortController = new AbortController();
+
+    // Слушаем закрытие соединения на объекте ОТВЕТА
+    reply.raw.on('close', () => {
+        if (!reply.raw.writableEnded) {
+            console.log("\n🛑 Клиент разорвал соединение. Останавливаю модель...");
+            abortController.abort(); // Посылаем сигнал отмены в библиотеку
+        }
+    });
+
     // Явно прописываем CORS и SSE заголовки для сырого ответа (reply.raw)
     reply.raw.writeHead(200, {
         'Content-Type': 'text/event-stream',
@@ -69,9 +80,10 @@ fastify.post('/chat', async (request, reply) => {
 
         // Используем стандартный prompt, но с обработчиком токенов
         await session.prompt(prompt, {
+            signal: abortController.signal, // САМЫЙ ВАЖНЫЙ МОМЕНТ
             onToken: (tokens) => {
                 const chunk = model.detokenize(tokens);
-                process.stdout.write(chunk); // Видим процесс в консоли сервера
+                process.stdout.write(chunk);
                 reply.raw.write(`data: ${JSON.stringify({ chunk })}\n\n`);
             },
             maxTokens: CONFIG.maxTokens,
@@ -82,14 +94,22 @@ fastify.post('/chat', async (request, reply) => {
             }
         });
 
-        reply.raw.write('data: [DONE]\n\n');
-        reply.raw.end();
-        console.log("\n--- Ответ завершен ---");
+        // Если дошли сюда — значит генерация завершилась сама
+        if (!abortController.signal.aborted) {
+            reply.raw.write('data: [DONE]\n\n');
+            reply.raw.end();
+            console.log("\n--- Ответ завершен ---");
+        }
 
     } catch (error) {
-        console.error("Ошибка генерации:", error);
+        // Библиотека может выброситьAbortError при отмене — это нормально
+        if (error.name === 'AbortError' || abortController.signal.aborted) {
+            console.log("--- Генерация успешно прервана через Signal ---");
+        } else {
+            console.error("\n❌ Ошибка:", error);
+        }
+        
         if (!reply.raw.writableEnded) {
-            reply.raw.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
             reply.raw.end();
         }
     }
