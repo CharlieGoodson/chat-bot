@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import cors from '@fastify/cors';
 import { LlamaModel, LlamaContext, LlamaChatSession, getLlama, ChatMLChatWrapper } from "node-llama-cpp";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -33,6 +34,11 @@ const session = new LlamaChatSession({
 // Задай свой секретный ключ
 // const API_KEY = "my-secret-key-123";
 
+await fastify.register(cors, { 
+    origin: "*",
+    methods: ["POST", "GET"]
+});
+
 // Единственный POST маршрут для обработки промптов
 fastify.post('/chat', async (request, reply) => {
     // Проверка заголовка авторизации
@@ -48,10 +54,15 @@ fastify.post('/chat', async (request, reply) => {
         return reply.code(400).send({ error: "Промпт обязателен" });
     }
 
-    // Устанавливаем заголовки для стриминга (SSE)
-    reply.raw.setHeader('Content-Type', 'text/event-stream');
-    reply.raw.setHeader('Cache-Control', 'no-cache');
-    reply.raw.setHeader('Connection', 'keep-alive');
+    // Явно прописываем CORS и SSE заголовки для сырого ответа (reply.raw)
+    reply.raw.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*', // РЕШАЕТ ПРОБЛЕМУ CORS
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    });
 
     try {
         console.log(`\n--- Вопрос: ${prompt} ---`);
