@@ -1,0 +1,41 @@
+# Node
+node_modules/
+.env
+.env.*             # .env.development, .env.production и т.д.
+
+# Build output
+dist/
+build/
+pgdata/
+model/
+
+tmp/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Drizzle ORM
+# drizzle/
+.migrations/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.history
+
+# Testing
+coverage/
+*.test.ts
+*.spec.ts
+
+# Others
+*.swp
