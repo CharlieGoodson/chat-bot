@@ -1,8 +1,8 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import {
-  LlamaModel,
-  LlamaContext,
+  // LlamaModel,
+  // LlamaContext,
   LlamaChatSession,
   getLlama,
   ChatMLChatWrapper,
@@ -16,6 +16,7 @@ const CONFIG = {
   contextSize: 2048,
   temp: 0.7,
   maxTokens: 1024,
+  maxParallelUsers: 2,
 }
 
 // Настройка путей (нужна для корректной работы в ES-модулях)
@@ -27,19 +28,18 @@ const fastify = Fastify({ logger: true })
 // Инициализация
 const llama = await getLlama()
 const model = await llama.loadModel({ modelPath })
-const context = await model.createContext({ contextSize: CONFIG.contextSize })
 
-// В версии 3.0+ сессия создается вот так:
-const session = new LlamaChatSession({
-  contextSequence: context.getSequence(),
-  chatWrapper: new ChatMLChatWrapper(),
-  // Добавляем системную инструкцию
-  systemPrompt:
-    "You are a helpful and professional AI assistant. Answer the user's questions clearly and accurately in the language of the user's request.",
+// Создаем контекст ОДИН раз (наше общее игровое поле)
+const context = await model.createContext({
+  contextSize: CONFIG.contextSize,
+  sequences: CONFIG.maxParallelUsers,
 })
 
+// Наша "Картотека" сессий
+const userSessions = new Map()
+
 // Задай свой секретный ключ
-// const API_KEY = "my-secret-key-123";
+const API_KEY = 'my-secret-key-123'
 
 await fastify.register(cors, {
   origin: '*',
@@ -49,16 +49,30 @@ await fastify.register(cors, {
 // Единственный POST маршрут для обработки промптов
 fastify.post('/chat', async (request, reply) => {
   // Проверка заголовка авторизации
-  // const authHeader = request.headers['authorization'];
+  const authHeader = request.headers['authorization']
 
-  // if (!authHeader || authHeader !== `Bearer ${API_KEY}`) {
-  //     return reply.code(401).send({ error: "Unauthorized: Invalid API Key" });
-  // }
+  if (!authHeader || authHeader !== `Bearer ${API_KEY}`) {
+    return reply.code(401).send({ error: 'Unauthorized: Invalid API Key' })
+  }
 
-  const { prompt } = request.body
+  const { prompt, sessionId } = request.body
 
-  if (!prompt) {
-    return reply.code(400).send({ error: 'Промпт обязателен' })
+  if (!prompt || !sessionId) {
+    return reply.code(400).send({ error: 'Нужны prompt и sessionId' })
+  }
+
+  // Ищем сессию пользователя или создаем новую
+  let session = userSessions.get(sessionId)
+  if (!session) {
+    console.log(`[New Session] Создаю новую сессию для: ${sessionId}`)
+    session = new LlamaChatSession({
+      contextSequence: context.getSequence(),
+      chatWrapper: new ChatMLChatWrapper(),
+      // Добавляем системную инструкцию
+      systemPrompt:
+        "You are a helpful and professional AI assistant. Answer the user's questions clearly and accurately in the language of the user's request.",
+    })
+    userSessions.set(sessionId, session)
   }
 
   // 1. Создаем контроллер для этого конкретного запроса

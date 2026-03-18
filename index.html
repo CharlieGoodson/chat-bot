@@ -177,6 +177,14 @@
     </div>
 
     <script>
+      // Получаем старый ID или создаем новый для этой вкладки
+      let sessionId = sessionStorage.getItem('chat_session_id')
+      if (!sessionId) {
+        sessionId = crypto.randomUUID()
+        sessionStorage.setItem('chat_session_id', sessionId)
+      }
+      console.log('Ваш ID сессии:', sessionId)
+
       let currentAbortController = null // Храним контроллер здесь
 
       function stopGeneration() {
@@ -227,8 +235,11 @@
         try {
           const response = await fetch('http://127.0.0.1:3000/chat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt }),
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer my-secret-key-123`,
+            },
+            body: JSON.stringify({ prompt, sessionId }),
             signal: currentAbortController.signal, // Передаем сигнал в fetch
           })
 
