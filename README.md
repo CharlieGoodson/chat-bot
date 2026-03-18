@@ -3,6 +3,7 @@
 Минималистичный и производительный чат-бот на базе локальных нейросетей, развернутый с использованием Node.js и Fastify. Позволяет взаимодействовать с LLM моделями через REST API с поддержкой стриминга (SSE).
 
 ## 🚀 Стек технологий
+
 - **Runtime:** Node.js (v18+)
 - **Web Framework:** Fastify
 - **LLM Engine:** `node-llama-cpp` (интерфейс для llama.cpp)
@@ -10,6 +11,7 @@
 - **API:** REST (JSON) + Server-Sent Events (SSE) для стриминга
 
 ## 🛠 Функционал
+
 - **Streaming Response:** Ответы приходят в реальном времени, буква за буквой.
 - **Security:** Базовая авторизация по API-ключу (Bearer Token).
 - **Flexibility:** Поддержка любой модели в формате GGUF (Llama, Qwen, Mistral, DeepSeek).
@@ -18,6 +20,7 @@
 ## 📦 Инструкция по развертыванию
 
 ### 1. Подготовка папки
+
 ```bash
 mkdir chat-bot-node
 cd chat-bot-node
@@ -26,6 +29,7 @@ npm install fastify node-llama-cpp
 ```
 
 ### 2. Настройка проекта
+
 Убедитесь, что в <code>package.json</code> добавлен тип модуля:
 
 ```json
@@ -35,6 +39,7 @@ npm install fastify node-llama-cpp
 ```
 
 ### 3. Модели
+
 Для работы проекта необходимо скачать файл модели в формате <code>.gguf</code> и положить его в папку <code>/model</code>.
 
 #### Рекомендуемые модели:
@@ -52,14 +57,17 @@ https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/tree/main
 https://huggingface.co/lmstudio-community/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/tree/main
 
 ### 4. Запуск сервера
+
 Отредактируйте index.js, указав имя вашего файла модели, и запустите сервер:
 
 ```bash
 node index.js
 ```
+
 Сервер будет доступен по адресу: http://localhost:3000/chat
 
 ### 📡 Использование API
+
 Отправьте POST запрос с промптом и вашим секретным ключом:
 
 Пример через cURL:
@@ -72,6 +80,7 @@ curl -N -X POST http://localhost:3000/chat \
 ```
 
 ### ⚙️ Настройка (Параметры)
+
 В файле <code>index.js</code> вы можете изменить:
 
 <code>contextSize</code>: объем памяти диалога (по умолчанию 2048).
