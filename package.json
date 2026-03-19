@@ -1,23 +1,23 @@
 {
-  "name": "chat-bot-node",
-  "version": "1.1.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js",
-    "fmt": "npx prettier --write ./"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "dependencies": {
-    "@fastify/cors": "^11.2.0",
-    "fastify": "^5.8.2",
-    "node-llama-cpp": "^3.18.1"
-  },
-  "devDependencies": {
-    "prettier": "^3.8.1"
-  }
+    "name": "chat-bot-node",
+    "version": "1.1.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "node --watch index.js",
+        "fmt": "npx prettier --write ./"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "module",
+    "dependencies": {
+        "@fastify/cors": "^11.2.0",
+        "fastify": "^5.8.2",
+        "node-llama-cpp": "^3.18.1"
+    },
+    "devDependencies": {
+        "prettier": "^3.8.1"
+    }
 }

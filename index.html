@@ -1,309 +1,312 @@
 <!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Local AI Chat</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-      /* Базовые настройки страницы */
-      body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        background: #f0f2f5;
-        display: flex;
-        justify-content: center;
-        padding: 10px;
-        margin: 0;
-      }
+    <head>
+        <meta charset="UTF-8" />
+        <title>Local AI Chat</title>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <style>
+            /* Базовые настройки страницы */
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+                    sans-serif;
+                background: #f0f2f5;
+                display: flex;
+                justify-content: center;
+                padding: 10px;
+                margin: 0;
+            }
 
-      .chat-container {
-        width: 100%;
-        max-width: 900px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        display: flex;
-        flex-direction: column;
-        height: 95vh;
-      }
+            .chat-container {
+                width: 100%;
+                max-width: 900px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+                display: flex;
+                flex-direction: column;
+                height: 95vh;
+            }
 
-      /* Окно чата */
-      #chat-window {
-        flex: 1;
-        overflow-y: auto;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px; /* Расстояние между пузырьками */
-      }
+            /* Окно чата */
+            #chat-window {
+                flex: 1;
+                overflow-y: auto;
+                padding: 15px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px; /* Расстояние между пузырьками */
+            }
 
-      /* Общие стили для сообщений */
-      .message {
-        padding: 8px 12px;
-        border-radius: 12px;
-        max-width: 85%;
-        font-size: 14.5px;
-        line-height: 1.4;
-      }
+            /* Общие стили для сообщений */
+            .message {
+                padding: 8px 12px;
+                border-radius: 12px;
+                max-width: 85%;
+                font-size: 14.5px;
+                line-height: 1.4;
+            }
 
-      .user {
-        background: #007bff;
-        color: white;
-        align-self: flex-end;
-        border-bottom-right-radius: 2px;
-      }
+            .user {
+                background: #007bff;
+                color: white;
+                align-self: flex-end;
+                border-bottom-right-radius: 2px;
+            }
 
-      .ai {
-        background: #f8f9fa;
-        color: #1c1e21;
-        align-self: flex-start;
-        border-left: 3px solid #007bff;
-        border-bottom-left-radius: 2px;
-      }
+            .ai {
+                background: #f8f9fa;
+                color: #1c1e21;
+                align-self: flex-start;
+                border-left: 3px solid #007bff;
+                border-bottom-left-radius: 2px;
+            }
 
-      .stats {
-        font-size: 12px;
-        color: #666;
-        padding: 5px 15px;
-        background: #fdfdfd;
-        border-top: 1px solid #eee;
-        display: flex;
-        justify-content: space-between;
-      }
-      .stat-item b {
-        color: #007bff;
-      }
+            .stats {
+                font-size: 12px;
+                color: #666;
+                padding: 5px 15px;
+                background: #fdfdfd;
+                border-top: 1px solid #eee;
+                display: flex;
+                justify-content: space-between;
+            }
+            .stat-item b {
+                color: #007bff;
+            }
 
-      /* Убираем гигантские отступы Markdown внутри сообщений */
-      .content p {
-        margin: 0 0 8px 0;
-      }
-      .content p:last-child {
-        margin-bottom: 0;
-      }
+            /* Убираем гигантские отступы Markdown внутри сообщений */
+            .content p {
+                margin: 0 0 8px 0;
+            }
+            .content p:last-child {
+                margin-bottom: 0;
+            }
 
-      .content ul,
-      .content ol {
-        margin: 5px 0;
-        padding-left: 20px;
-      }
+            .content ul,
+            .content ol {
+                margin: 5px 0;
+                padding-left: 20px;
+            }
 
-      .content li {
-        margin-bottom: 3px;
-      }
+            .content li {
+                margin-bottom: 3px;
+            }
 
-      /* Компактные блоки кода */
-      pre {
-        background: #282c34;
-        color: #abb2bf;
-        padding: 10px;
-        border-radius: 6px;
-        overflow-x: auto;
-        margin: 8px 0;
-        font-size: 13px;
-      }
+            /* Компактные блоки кода */
+            pre {
+                background: #282c34;
+                color: #abb2bf;
+                padding: 10px;
+                border-radius: 6px;
+                overflow-x: auto;
+                margin: 8px 0;
+                font-size: 13px;
+            }
 
-      code {
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-        background: rgba(0, 0, 0, 0.05);
-        padding: 2px 4px;
-        border-radius: 4px;
-      }
+            code {
+                font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+                background: rgba(0, 0, 0, 0.05);
+                padding: 2px 4px;
+                border-radius: 4px;
+            }
 
-      pre code {
-        background: none;
-        padding: 0;
-        color: inherit;
-      }
+            pre code {
+                background: none;
+                padding: 0;
+                color: inherit;
+            }
 
-      /* Инпут и кнопки */
-      .input-area {
-        padding: 12px 15px;
-        display: flex;
-        gap: 8px;
-        border-top: 1px solid #eee;
-      }
+            /* Инпут и кнопки */
+            .input-area {
+                padding: 12px 15px;
+                display: flex;
+                gap: 8px;
+                border-top: 1px solid #eee;
+            }
 
-      input {
-        flex: 1;
-        padding: 10px 15px;
-        border: 1px solid #ddd;
-        border-radius: 20px;
-        outline: none;
-        font-size: 14px;
-      }
+            input {
+                flex: 1;
+                padding: 10px 15px;
+                border: 1px solid #ddd;
+                border-radius: 20px;
+                outline: none;
+                font-size: 14px;
+            }
 
-      button {
-        padding: 8px 18px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: background 0.2s;
-      }
+            button {
+                padding: 8px 18px;
+                background: #007bff;
+                color: white;
+                border: none;
+                border-radius: 20px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: background 0.2s;
+            }
 
-      button:hover {
-        background: #0056b3;
-      }
-      #stop-btn {
-        background: #ff4d4f;
-        display: none;
-      }
-      #stop-btn:hover {
-        background: #d9363e;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="chat-container">
-      <div id="chat-window"></div>
-      <div class="stats" id="stats-bar" style="display: none">
-        <span class="stat-item">Скорость: <b id="speed-val">0</b> t/s</span>
-        <span class="stat-item">Всего токенов: <b id="tokens-val">0</b></span>
-        <span class="stat-item">Время: <b id="time-val">0</b>s</span>
-      </div>
-      <div class="input-area">
-        <input
-          type="text"
-          id="user-input"
-          placeholder="Введите ваш промпт..."
-          onkeypress="if (event.key === 'Enter') sendMessage()"
-        />
-        <button id="send-btn" onclick="sendMessage()">Отправить</button>
-        <button id="stop-btn" onclick="stopGeneration()">Стоп</button>
-      </div>
-    </div>
+            button:hover {
+                background: #0056b3;
+            }
+            #stop-btn {
+                background: #ff4d4f;
+                display: none;
+            }
+            #stop-btn:hover {
+                background: #d9363e;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="chat-container">
+            <div id="chat-window"></div>
+            <div class="stats" id="stats-bar" style="display: none">
+                <span class="stat-item">Скорость: <b id="speed-val">0</b> t/s</span>
+                <span class="stat-item">Всего токенов: <b id="tokens-val">0</b></span>
+                <span class="stat-item">Время: <b id="time-val">0</b>s</span>
+            </div>
+            <div class="input-area">
+                <input
+                    type="text"
+                    id="user-input"
+                    placeholder="Введите ваш промпт..."
+                    onkeypress="if (event.key === 'Enter') sendMessage()"
+                />
+                <button id="send-btn" onclick="sendMessage()">Отправить</button>
+                <button id="stop-btn" onclick="stopGeneration()">Стоп</button>
+            </div>
+        </div>
 
-    <script>
-      // Получаем старый ID или создаем новый для этой вкладки
-      let sessionId = sessionStorage.getItem('chat_session_id')
-      if (!sessionId) {
-        sessionId = crypto.randomUUID()
-        sessionStorage.setItem('chat_session_id', sessionId)
-      }
-      console.log('Ваш ID сессии:', sessionId)
+        <script>
+            // Получаем старый ID или создаем новый для этой вкладки
+            let sessionId = sessionStorage.getItem('chat_session_id')
+            if (!sessionId) {
+                sessionId = crypto.randomUUID()
+                sessionStorage.setItem('chat_session_id', sessionId)
+            }
+            console.log('Ваш ID сессии:', sessionId)
 
-      let currentAbortController = null // Храним контроллер здесь
+            let currentAbortController = null // Храним контроллер здесь
 
-      function stopGeneration() {
-        if (currentAbortController) {
-          currentAbortController.abort() // Останавливаем fetch
-          currentAbortController = null
-        }
-      }
+            function stopGeneration() {
+                if (currentAbortController) {
+                    currentAbortController.abort() // Останавливаем fetch
+                    currentAbortController = null
+                }
+            }
 
-      async function sendMessage() {
-        const input = document.getElementById('user-input')
-        const statsBar = document.getElementById('stats-bar')
-        const speedVal = document.getElementById('speed-val')
-        const tokensVal = document.getElementById('tokens-val')
-        const timeVal = document.getElementById('time-val')
-        const sendBtn = document.getElementById('send-btn')
-        const stopBtn = document.getElementById('stop-btn')
-        const chatWindow = document.getElementById('chat-window')
-        const prompt = input.value.trim()
+            async function sendMessage() {
+                const input = document.getElementById('user-input')
+                const statsBar = document.getElementById('stats-bar')
+                const speedVal = document.getElementById('speed-val')
+                const tokensVal = document.getElementById('tokens-val')
+                const timeVal = document.getElementById('time-val')
+                const sendBtn = document.getElementById('send-btn')
+                const stopBtn = document.getElementById('stop-btn')
+                const chatWindow = document.getElementById('chat-window')
+                const prompt = input.value.trim()
 
-        if (!prompt) return
+                if (!prompt) return
 
-        // Создаем новый контроллер для этого запроса
-        currentAbortController = new AbortController()
+                // Создаем новый контроллер для этого запроса
+                currentAbortController = new AbortController()
 
-        // Блокируем ввод
-        input.value = ''
-        input.disabled = true
-        sendBtn.style.display = 'none'
-        stopBtn.style.display = 'inline-block'
+                // Блокируем ввод
+                input.value = ''
+                input.disabled = true
+                sendBtn.style.display = 'none'
+                stopBtn.style.display = 'inline-block'
 
-        // Добавляем сообщение пользователя
-        chatWindow.innerHTML += `<div class="message user"><b>Вы:</b> ${prompt}</div>`
+                // Добавляем сообщение пользователя
+                chatWindow.innerHTML += `<div class="message user"><b>Вы:</b> ${prompt}</div>`
 
-        // Создаем контейнер для ответа нейросети
-        const aiMsgDiv = document.createElement('div')
-        aiMsgDiv.className = 'message ai'
-        aiMsgDiv.innerHTML = '<b>AI:</b> <span class="content"></span>'
-        chatWindow.appendChild(aiMsgDiv)
-        const contentDiv = aiMsgDiv.querySelector('.content')
+                // Создаем контейнер для ответа нейросети
+                const aiMsgDiv = document.createElement('div')
+                aiMsgDiv.className = 'message ai'
+                aiMsgDiv.innerHTML = '<b>AI:</b> <span class="content"></span>'
+                chatWindow.appendChild(aiMsgDiv)
+                const contentDiv = aiMsgDiv.querySelector('.content')
 
-        chatWindow.scrollTop = chatWindow.scrollHeight
+                chatWindow.scrollTop = chatWindow.scrollHeight
 
-        let fullText = ''
-        let tokenCount = 0
-        let startTime = null
-
-        try {
-          const response = await fetch('http://127.0.0.1:3000/chat', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer my-secret-key-123`,
-            },
-            body: JSON.stringify({ prompt, sessionId }),
-            signal: currentAbortController.signal, // Передаем сигнал в fetch
-          })
-
-          const reader = response.body.getReader()
-          const decoder = new TextDecoder()
-
-          statsBar.style.display = 'flex' // Показываем панель статистики
-
-          while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
-
-            // Засекаем время старта при первом чанке
-            if (!startTime) startTime = performance.now()
-
-            const chunk = decoder.decode(value, { stream: true })
-            // Разбираем SSE формат (data: {"chunk": "..."})
-            const lines = chunk.split('\n')
-
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const dataStr = line.replace('data: ', '').trim()
-                if (dataStr === '[DONE]') break
+                let fullText = ''
+                let tokenCount = 0
+                let startTime = null
 
                 try {
-                  const data = JSON.parse(dataStr)
-                  if (data.chunk) {
-                    fullText += data.chunk
-                    tokenCount++ // В нашем случае 1 чанк от сервера = 1 генерация токена
+                    const response = await fetch('http://127.0.0.1:3000/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer my-secret-key-123`,
+                        },
+                        body: JSON.stringify({ prompt, sessionId }),
+                        signal: currentAbortController.signal, // Передаем сигнал в fetch
+                    })
 
-                    // Считаем показатели
-                    const currentTime = performance.now()
-                    const durationSeconds = (currentTime - startTime) / 1000
-                    const tokensPerSecond = (tokenCount / durationSeconds).toFixed(1)
+                    const reader = response.body.getReader()
+                    const decoder = new TextDecoder()
 
-                    // Обновляем UI
-                    contentDiv.innerHTML = marked.parse(fullText)
-                    speedVal.textContent = tokensPerSecond
-                    tokensVal.textContent = tokenCount
-                    timeVal.textContent = durationSeconds.toFixed(1)
+                    statsBar.style.display = 'flex' // Показываем панель статистики
 
-                    chatWindow.scrollTop = chatWindow.scrollHeight
-                  }
-                } catch (e) {
-                  console.error('Ошибка парсинга чанка:', e)
+                    while (true) {
+                        const { done, value } = await reader.read()
+                        if (done) break
+
+                        // Засекаем время старта при первом чанке
+                        if (!startTime) startTime = performance.now()
+
+                        const chunk = decoder.decode(value, { stream: true })
+                        // Разбираем SSE формат (data: {"chunk": "..."})
+                        const lines = chunk.split('\n')
+
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                const dataStr = line.replace('data: ', '').trim()
+                                if (dataStr === '[DONE]') break
+
+                                try {
+                                    const data = JSON.parse(dataStr)
+                                    if (data.chunk) {
+                                        fullText += data.chunk
+                                        tokenCount++ // В нашем случае 1 чанк от сервера = 1 генерация токена
+
+                                        // Считаем показатели
+                                        const currentTime = performance.now()
+                                        const durationSeconds = (currentTime - startTime) / 1000
+                                        const tokensPerSecond = (
+                                            tokenCount / durationSeconds
+                                        ).toFixed(1)
+
+                                        // Обновляем UI
+                                        contentDiv.innerHTML = marked.parse(fullText)
+                                        speedVal.textContent = tokensPerSecond
+                                        tokensVal.textContent = tokenCount
+                                        timeVal.textContent = durationSeconds.toFixed(1)
+
+                                        chatWindow.scrollTop = chatWindow.scrollHeight
+                                    }
+                                } catch (e) {
+                                    console.error('Ошибка парсинга чанка:', e)
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        contentDiv.innerHTML += '<br><i>[Генерация остановлена пользователем]</i>'
+                    } else {
+                        contentDiv.textContent = 'Ошибка связи с сервером.'
+                        console.error(error)
+                    }
+                } finally {
+                    input.disabled = false
+                    sendBtn.style.display = 'inline-block'
+                    stopBtn.style.display = 'none'
+                    currentAbortController = null
+                    input.focus()
                 }
-              }
             }
-          }
-        } catch (error) {
-          if (error.name === 'AbortError') {
-            contentDiv.innerHTML += '<br><i>[Генерация остановлена пользователем]</i>'
-          } else {
-            contentDiv.textContent = 'Ошибка связи с сервером.'
-            console.error(error)
-          }
-        } finally {
-          input.disabled = false
-          sendBtn.style.display = 'inline-block'
-          stopBtn.style.display = 'none'
-          currentAbortController = null
-          input.focus()
-        }
-      }
-    </script>
-  </body>
+        </script>
+    </body>
 </html>

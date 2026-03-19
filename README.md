@@ -34,7 +34,7 @@ npm install fastify node-llama-cpp
 
 ```json
 {
-  "type": "module"
+    "type": "module"
 }
 ```
 
