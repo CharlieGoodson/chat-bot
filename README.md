@@ -13,19 +13,18 @@
 ## 🛠 Функционал
 
 - **Streaming Response:** Ответы приходят в реальном времени, буква за буквой.
+- **Stop Generation:** Возможность принудительно остановить генерацию ответа в любой момент.
+- **Chat History:** Автоматическое сохранение истории переписки в рамках сессии.
 - **Security:** Базовая авторизация по API-ключу (Bearer Token).
 - **Flexibility:** Поддержка любой модели в формате GGUF (Llama, Qwen, Mistral, DeepSeek).
 - **Efficiency:** Оптимизированный контекст и настройки температуры для стабильной работы на домашнем железе.
 
 ## 📦 Инструкция по развертыванию
 
-### 1. Подготовка папки
+### 1. Клонирование репозитория
 
 ```bash
-mkdir chat-bot-node
-cd chat-bot-node
-npm init -y
-npm install fastify node-llama-cpp
+git clone [адрес репозитория]
 ```
 
 ### 2. Настройка проекта
@@ -36,6 +35,11 @@ npm install fastify node-llama-cpp
 {
     "type": "module"
 }
+```
+Затем установите необходимые пакеты
+
+```bash
+npm install
 ```
 
 ### 3. Модели
@@ -61,7 +65,7 @@ https://huggingface.co/lmstudio-community/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/tre
 Отредактируйте index.js, указав имя вашего файла модели, и запустите сервер:
 
 ```bash
-node index.js
+npm start
 ```
 
 Сервер будет доступен по адресу: http://localhost:3000/chat
