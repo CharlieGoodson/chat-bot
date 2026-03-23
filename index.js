@@ -5,10 +5,11 @@ import {
     // LlamaContext,
     LlamaChatSession,
     getLlama,
-    ChatMLChatWrapper,
+    // ChatMLChatWrapper,
 } from 'node-llama-cpp'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { saveSessionToFile, loadSessionFromFile } from './memory.js'
 
 // Конфигурация
 const CONFIG = {
@@ -79,8 +80,12 @@ fastify.post('/chat', async (request, reply) => {
                 }
             }
             if (idToDispose) {
-                console.log(`[Capacity] Принудительно освобождаю слот: ${idToDispose}`)
+                console.log(`[Capacity] Сохраняю и выселяю: ${idToDispose}`)
                 const data = userSessions.get(idToDispose)
+
+                // Сначала сохраняем данные в файл!
+                await saveSessionToFile(idToDispose, data.session)
+
                 await data.session.dispose()
                 data.sequence.dispose()
                 // Даем Node.js один "тик", чтобы нативный слой точно обновил состояние
@@ -97,15 +102,18 @@ fastify.post('/chat', async (request, reply) => {
 
         console.log(`[New Session] Создаю новую сессию для: ${sessionId}`)
         const sequence = context.getSequence()
+        const history = await loadSessionFromFile(sessionId) // Пытаемся загрузить историю из файла
+        console.log('Loaded history for session', sessionId, history)
         const session = new LlamaChatSession({
             contextSequence: sequence,
-            chatWrapper: new ChatMLChatWrapper(),
+            // chatWrapper: new ChatMLChatWrapper(),
             // Добавляем системную инструкцию
             systemPrompt:
                 "You are a helpful and professional AI assistant. Answer the user's questions clearly and accurately in the language of the user's request.",
         })
         sessionData = { session, sequence }
         userSessions.set(sessionId, sessionData)
+        session.setChatHistory(history)
     }
 
     // 1. Создаем контроллер для этого конкретного запроса
