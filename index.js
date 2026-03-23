@@ -5,7 +5,7 @@ import {
     // LlamaContext,
     LlamaChatSession,
     getLlama,
-    // ChatMLChatWrapper,
+    ChatMLChatWrapper,
 } from 'node-llama-cpp'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -106,7 +106,7 @@ fastify.post('/chat', async (request, reply) => {
         console.log('Loaded history for session', sessionId, history)
         const session = new LlamaChatSession({
             contextSequence: sequence,
-            // chatWrapper: new ChatMLChatWrapper(),
+            chatWrapper: new ChatMLChatWrapper(),
             // Добавляем системную инструкцию
             systemPrompt:
                 "You are a helpful and professional AI assistant. Answer the user's questions clearly and accurately in the language of the user's request.",
