@@ -24,6 +24,15 @@ export async function loadSessionFromFile(sessionId) {
             const fileData = await fs.readFile(filePath, 'utf-8')
             history = JSON.parse(fileData)
             console.log(`[Persistence] История для ${sessionId} восстановлена.`)
+
+            const MAX_MESSAGES = 10
+
+            if (history.length > MAX_MESSAGES) {
+                console.log(
+                    `[Trimming] История слишком длинная, оставляю последние ${MAX_MESSAGES} сообщений.`,
+                )
+                historyhistory.slice(-MAX_MESSAGES)
+            }
         }
     } catch (e) {
         console.error('Ошибка загрузки истории:', e)
